@@ -12,8 +12,9 @@ DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "examsdb")
 DB_USER = os.getenv("DB_USER", "devinuser")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "devinpass")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
-TABLE_SCHEMA = """
+TABLE_SCHEMA= """
 Table name: exams
 Columns:
 - roll_no (INTEGER, PRIMARY KEY): Student roll number
@@ -77,8 +78,9 @@ def main():
         st.header("Configuration")
         api_key = st.text_input(
             "Google Gemini API Key",
+            value=GOOGLE_API_KEY,
             type="password",
-            help="Enter your Google Gemini API key to enable text-to-SQL translation.",
+            help="Enter your Google Gemini API key or set GOOGLE_API_KEY in .env file.",
         )
         if api_key:
             st.success("API Key provided")
