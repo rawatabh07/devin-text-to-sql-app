@@ -14,7 +14,9 @@ DB_USER = os.getenv("DB_USER", "devinuser")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "devinpass")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
-TABLE_SCHEMA= """
+MODEL_FALLBACKS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]
+
+TABLE_SCHEMA ="""
 Table name: exams
 Columns:
 - roll_no (INTEGER, PRIMARY KEY): Student roll number
@@ -39,7 +41,6 @@ def get_db_connection():
 
 def generate_sql(user_query, api_key):
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
 
     prompt = f"""You are a SQL expert. Given the following PostgreSQL database schema:
 
@@ -53,10 +54,18 @@ Question: {user_query}
 
 SQL Query:"""
 
-    response = model.generate_content(prompt)
-    sql_query = response.text.strip()
-    sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
-    return sql_query
+    last_error = None
+    for model_name in MODEL_FALLBACKS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            sql_query = response.text.strip()
+            sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+            return sql_query
+        except Exception as e:
+            last_error = e
+            continue
+    raise last_error
 
 
 def execute_query(sql_query):
